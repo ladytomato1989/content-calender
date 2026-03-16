@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>酒鬼学姐玩AI — Content Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f4f0;
+    --bg-card: #ffffff;
+    --bg-card-hover: #fefefe;
+    --bg-today: #fffbf0;
+    --border: #e8e4dc;
+    --border-light: #f0ece6;
+    --text: #1a1816;
+    --text-secondary: #6b635a;
+    --text-muted: #a89f94;
+    --wine: #a03050;
+    --wine-light: #f8eef1;
+    --wine-bg: rgba(160,48,80,0.06);
+    --gold: #b8860b;
+    --gold-light: #fdf6e3;
+    --cyan: #1a7a6e;
+    --cyan-light: #eef8f6;
+    --orange: #c06020;
+    --orange-light: #fef4ec;
+    --purple: #6850a0;
+    --purple-light: #f4f0fa;
+    --red: #c03838;
+    --red-light: #fdf0f0;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', -apple-system, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 64px 40px 48px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--wine);
+    margin-bottom: 16px;
+  }
+
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(40px, 5.5vw, 64px);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 span {
+    color: var(--wine);
+    font-style: normal;
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    color: var(--text-secondary);
+    font-weight: 300;
+  }
+
+  /* ── Stats ribbon ── */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    padding: 28px 40px;
+    margin: 0 auto 32px;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── Phase tabs ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 40px 32px;
+    flex-wrap: wrap;
+  }
+
+  .tab {
+    font-family: 'Noto Sans SC', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 7px 18px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .tab:hover { border-color: var(--text-muted); }
+  .tab.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 0 40px 36px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .legend-dot {
+    width: 8px; height: 8px;
+    border-radius: 2px;
+  }
+
+  /* ── Container ── */
+  .container {
+    max-width: 1260px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Month header ── */
+  .month-section {
+    margin-bottom: 48px;
+  }
+
+  .month-section.hidden { display: none; }
+
+  .month-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 0 8px;
+  }
+
+  .month-name {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px;
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .month-phase {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .month-phase.prep { background: #f0eee8; color: var(--text-muted); }
+  .month-phase.ignite { background: var(--red-light); color: var(--red); }
+  .month-phase.grow { background: var(--cyan-light); color: var(--cyan); }
+  .month-phase.explode { background: var(--gold-light); color: var(--gold); }
+
+  .month-goal {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  /* ── Weekday headers ── */
+  .weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 0 4px;
+  }
+
+  .weekday-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 4px 0;
+  }
+
+  /* ── Calendar grid ── */
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  /* ── Day card ── */
+  .day-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    min-height: 140px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .day-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--border);
+  }
+
+  .day-card.empty {
+    background: transparent;
+    border: 1px dashed var(--border-light);
+    box-shadow: none;
+    min-height: 80px;
+  }
+
+  .day-card.empty:hover { transform: none; box-shadow: none; }
+
+  .day-card.today {
+    border-color: var(--wine);
+    border-width: 2px;
+    background: var(--bg-today);
+    box-shadow: 0 0 0 3px var(--wine-bg);
+  }
+
+  .day-card.today .day-num { color: var(--wine); }
+
+  .day-card.milestone {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--gold-light) 100%);
+  }
+
+  .day-card.dday {
+    background: linear-gradient(135deg, var(--wine-light) 0%, var(--gold-light) 100%);
+    border-color: var(--gold);
+    border-width: 2px;
+  }
+
+  /* ── Day number ── */
+  .day-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .day-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .day-weekday-sm {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .day-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+
+  .badge-challenge { background: var(--wine-light); color: var(--wine); }
+  .badge-milestone { background: var(--gold-light); color: var(--gold); }
+
+  /* ── Content slots ── */
+  .slots {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+  }
+
+  .slot {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-secondary);
+    padding: 5px 7px;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+
+  .slot:hover { background: rgba(0,0,0,0.02); }
+
+  .slot-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    margin-top: 1px;
+  }
+
+  .slot-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tag-hot { background: var(--red-light); color: var(--red); }
+  .tag-tutorial { background: var(--cyan-light); color: var(--cyan); }
+  .tag-spicy { background: var(--orange-light); color: var(--orange); }
+  .tag-story { background: var(--purple-light); color: var(--purple); }
+  .tag-data { background: var(--gold-light); color: var(--gold); }
+  .tag-challenge { background: var(--wine-light); color: var(--wine); }
+  .tag-prep { background: #f0eee8; color: var(--text-muted); }
+
+  .slot-text {
+    flex: 1;
+    font-size: 11px;
+    color: var(--text);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ── Phase summary cards ── */
+  .phase-summary {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    padding: 0 4px;
+  }
+
+  .phase-event {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    grid-column: span 2;
+  }
+
+  .phase-event:last-child:nth-child(odd) {
+    grid-column: span 3;
+  }
+
+  .phase-event:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+
+  .phase-event-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .phase-event-title {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .phase-event-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  /* ── Growth section ── */
+  .growth-section {
+    margin: 56px auto;
+    max-width: 1200px;
+    padding: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .section-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    margin-bottom: 32px;
+    color: var(--text);
+  }
+
+  .growth-track {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 180px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .growth-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    justify-content: flex-end;
+  }
+
+  .growth-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .growth-bar {
+    width: 100%;
+    max-width: 56px;
+    border-radius: 6px 6px 0 0;
+    min-height: 2px;
+    transition: height 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .bar-prep { background: var(--border); }
+  .bar-ignite { background: linear-gradient(180deg, var(--red) 0%, #e8a0a0 100%); }
+  .bar-grow { background: linear-gradient(180deg, var(--cyan) 0%, #a0d8d0 100%); }
+  .bar-explode { background: linear-gradient(180deg, var(--gold) 0%, #e0cc80 100%); }
+
+  .growth-week {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+    position: absolute;
+    bottom: 10px;
+    text-align: center;
+    width: 100%;
+  }
+
+  /* ── Budget bar ── */
+  .budget-section { margin-top: 32px; }
+
+  .budget-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+  }
+
+  .budget-track {
+    display: flex;
+    gap: 3px;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .budget-seg {
+    border-radius: 6px;
+    transition: all 0.3s;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .budget-seg:hover { filter: brightness(0.9); transform: scaleY(1.5); }
+  .bseg-prep { background: var(--border); }
+  .bseg-ignite { background: var(--red); }
+  .bseg-grow { background: var(--cyan); }
+  .bseg-explode { background: var(--gold); }
+
+  .budget-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  /* ── Checklist ── */
+  .checklist-section {
+    margin: 0 auto 56px;
+    max-width: 1200px;
+    padding: 40px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .check-item:hover { background: #faf8f5; }
+
+  .check-item.checked {
+    opacity: 0.45;
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .check-box {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .check-item.checked .check-box {
+    background: var(--wine);
+    border-color: var(--wine);
+  }
+
+  .check-item.checked .check-box::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ── Top panels side by side ── */
+  .top-panels {
+    max-width: 1260px;
+    margin: 0 auto 36px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .top-panels { grid-template-columns: 1fr; }
+  }
+
+  .today-card {
+    background: var(--bg-card);
+    border: 2px solid var(--wine);
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 0 0 4px var(--wine-bg), var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .today-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--wine), var(--gold));
+  }
+
+  .weekly-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .weekly-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cyan), var(--gold));
+  }
+
+  .weekly-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .weekly-list::-webkit-scrollbar { width: 4px; }
+  .weekly-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .wk-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .wk-item:hover { background: #faf8f5; }
+
+  .wk-item.checked { opacity: 0.4; }
+  .wk-item.checked .wk-text { text-decoration: line-through; color: var(--text-muted); }
+
+  .wk-check {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .wk-item.checked .wk-check {
+    background: var(--cyan);
+    border-color: var(--cyan);
+  }
+
+  .wk-item.checked .wk-check::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .wk-text { flex: 1; }
+
+  .today-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .today-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    color: var(--text);
+  }
+
+  .today-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .today-phase-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-left: 12px;
+  }
+
+  .today-progress {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .today-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .today-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wine), var(--gold));
+    border-radius: 3px;
+    transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .today-progress-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .today-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .today-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .today-item:hover { background: #faf8f5; }
+
+  .today-item.checked {
+    opacity: 0.4;
+    background: #fafaf8;
+  }
+
+  .today-item.checked .today-item-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .today-item.overdue {
+    border-color: var(--orange);
+    background: var(--orange-light);
+  }
+
+  .today-item.overdue .today-item-from {
+    display: inline-block;
+  }
+
+  .today-item-check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s;
+  }
+
+  .today-item.checked .today-item-check {
+    background: var(--wine);
+    border-color: var(--wine);
+  }
+
+  .today-item.checked .today-item-check::after {
+    content: '✓';
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .today-item-tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .today-item-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .today-item-time {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .today-item-from {
+    display: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--orange);
+    padding: 1px 6px;
+    background: rgba(192,96,32,0.1);
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .today-empty {
+    text-align: center;
+    padding: 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .today-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 40px;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-light);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .cal-grid, .weekday-row { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .day-card { min-height: 100px; padding: 6px 8px; }
+    .day-num { font-size: 14px; }
+    .slot { padding: 3px 4px; }
+    .slot-text { font-size: 10px; }
+    .slot-time { display: none; }
+    .stats { gap: 20px; }
+    .hero { padding: 40px 20px 32px; }
+    .container { padding: 0 12px 48px; }
+    .phase-summary { grid-template-columns: 1fr 1fr; }
+    .phase-event { grid-column: span 1 !important; }
+  }
+
+  @media (max-width: 640px) {
+    .cal-grid { grid-template-columns: repeat(2, 1fr); }
+    .weekday-row { display: none; }
+    .day-card.empty { display: none; }
+  }
+
+  /* ── Animations ── */
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .day-card {
+    animation: cardIn 0.4s ease-out both;
+  }
+
+  .cal-grid .day-card:nth-child(1) { animation-delay: 0.00s; }
+  .cal-grid .day-card:nth-child(2) { animation-delay: 0.03s; }
+  .cal-grid .day-card:nth-child(3) { animation-delay: 0.06s; }
+  .cal-grid .day-card:nth-child(4) { animation-delay: 0.09s; }
+  .cal-grid .day-card:nth-child(5) { animation-delay: 0.12s; }
+  .cal-grid .day-card:nth-child(6) { animation-delay: 0.15s; }
+  .cal-grid .day-card:nth-child(7) { animation-delay: 0.18s; }
+  .cal-grid .day-card:nth-child(n+8) { animation-delay: 0.20s; }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-eyebrow">Content Calendar · 2026</div>
+  <h1><span>酒鬼学姐</span>玩AI</h1>
+  <p class="hero-sub">12周 · 从零到五十万 · 一切皆可自动化</p>
+</div>
+
+<!-- ═══ Today + Weekly side by side ═══ -->
+<div class="top-panels">
+  <div class="today-card">
+    <div class="today-header">
+      <div>
+        <span class="today-title">Today</span>
+        <span class="today-phase-tag" id="today-phase"></span>
+      </div>
+      <span class="today-date" id="today-date"></span>
+    </div>
+    <div class="today-progress">
+      <div class="today-progress-bar"><div class="today-progress-fill" id="today-progress"></div></div>
+      <span class="today-progress-text" id="today-progress-text">0/0</span>
+    </div>
+    <div class="today-list" id="today-list"></div>
+    <div class="today-footer">
+      <span id="today-overdue-hint"></span>
+      <span>未完成自动滚转到明天</span>
+    </div>
+  </div>
+
+  <div class="weekly-card">
+    <div class="today-header">
+      <div class="today-title" id="week-checklist-title">本周清单</div>
+      <span style="font-family:'DM Mono',monospace; font-size:12px; color:var(--text-muted);" id="week-checklist-progress"></span>
+    </div>
+    <div class="weekly-list" id="week-checklist"></div>
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-val">90</div><div class="stat-label">天</div></div>
+  <div class="stat"><div class="stat-val">~170</div><div class="stat-label">篇内容</div></div>
+  <div class="stat"><div class="stat-val">¥30K</div><div class="stat-label">投放预算</div></div>
+  <div class="stat"><div class="stat-val">500K</div><div class="stat-label">目标粉丝</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="filter('all',this)">全部</button>
+  <button class="tab" onclick="filter('prep',this)">W0 准备</button>
+  <button class="tab" onclick="filter('ignite',this)">W1-2 引爆</button>
+  <button class="tab" onclick="filter('grow',this)">W3-8 增长</button>
+  <button class="tab" onclick="filter('explode',this)">W9-12 爆发</button>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>热点首发</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--cyan)"></div>教程</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>酒鬼辣评</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>故事</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>数据裸奔</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--wine)"></div>挑战赛</div>
+</div>
+
+<div class="container">
+
+<!-- ════ MARCH — Week 0 + Week 1 ════ -->
+<div class="month-section" data-phase="prep ignite">
+  <div class="month-header">
+    <span class="month-name">March</span>
+    <span class="month-phase prep">准备</span>
+    <span class="month-phase ignite">引爆</span>
+    <span class="month-goal">W0-W1 · 目标: 0 → 20K粉</span>
+  </div>
+  <div class="weekday-row">
+    <div class="weekday-label">Mon</div>
+    <div class="weekday-label">Tue</div>
+    <div class="weekday-label">Wed</div>
+    <div class="weekday-label">Thu</div>
+    <div class="weekday-label">Fri</div>
+    <div class="weekday-label">Sat</div>
+    <div class="weekday-label">Sun</div>
+  </div>
+  <div class="cal-grid">
+
+    <!-- W0: 3/16-3/22 -->
+    <div class="day-card today">
+      <div class="day-top"><span class="day-num">16</span><span class="day-badge badge-milestone">TODAY</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">准备</span><span class="slot-text">制定增长方案 ✅</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">搭建</span><span class="slot-text">注册账号 · 完善资料</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">17</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">养号</span><span class="slot-text">刷AI笔记30min + 互动10条</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">备弹</span><span class="slot-text">Day1素材：小程序截图</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">18</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">养号</span><span class="slot-text">关注同赛道博主3-5个</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">备弹</span><span class="slot-text">Day2：V0搭个人品牌官网</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">19</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">养号</span><span class="slot-text">刷+互动</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">备弹</span><span class="slot-text">Day3：AI记账机器人</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">20</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">养号</span><span class="slot-text">刷+互动</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">备弹</span><span class="slot-text">Day4：AI选题助手</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">21</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">养号</span><span class="slot-text">养号完成 ✓</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">备弹</span><span class="slot-text">Day5：AI情绪日记</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">22</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-prep">打磨</span><span class="slot-text">精修Day1-5文案+封面</span></div>
+        <div class="slot"><span class="slot-tag tag-prep">框架</span><span class="slot-text">Day6投票 + Day7复盘</span></div>
+      </div>
+    </div>
+
+    <!-- W1: 3/23-3/29 (7天挑战赛) -->
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">23</span><span class="day-badge badge-challenge">Day 1/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">🔥 网球教练课时小程序</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">24</span><span class="day-badge badge-challenge">Day 2/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">个人品牌官网</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">25</span><span class="day-badge badge-challenge">Day 3/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">AI自动记账机器人</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">26</span><span class="day-badge badge-challenge">Day 4/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">小红书AI选题助手</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">27</span><span class="day-badge badge-challenge">Day 5/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">AI情绪日记App</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">28</span><span class="day-badge badge-challenge">Day 6/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">投票</span><span class="slot-text">🗳️ 评论区点菜款</span></div>
+      </div>
+    </div>
+    <div class="day-card milestone" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">29</span><span class="day-badge badge-challenge">Day 7/7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-challenge">复盘</span><span class="slot-text">⭐ 总结+全部开源 · 薯条¥500</span></div>
+      </div>
+    </div>
+
+    <!-- 3/30-3/31 also in March -->
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">30</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-data">数据</span><span class="slot-text">🔥 挑战赛数据裸奔</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">小程序教程拆解</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">31</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">官网教程拆解</span></div>
+      </div>
+    </div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+  </div>
+</div>
+
+<!-- ════ APRIL — Week 2-4 ════ -->
+<div class="month-section" data-phase="ignite grow">
+  <div class="month-header">
+    <span class="month-name">April</span>
+    <span class="month-phase ignite">承接</span>
+    <span class="month-phase grow">增长</span>
+    <span class="month-goal">W2-W4 · 目标: 20K → 80K粉</span>
+  </div>
+  <div class="weekday-row">
+    <div class="weekday-label">Mon</div>
+    <div class="weekday-label">Tue</div>
+    <div class="weekday-label">Wed</div>
+    <div class="weekday-label">Thu</div>
+    <div class="weekday-label">Fri</div>
+    <div class="weekday-label">Sat</div>
+    <div class="weekday-label">Sun</div>
+  </div>
+  <div class="cal-grid">
+
+    <!-- 4/1 Wed -->
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">1</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">记账机器人教程</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">2</span><span class="day-badge badge-milestone">NEW</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">🌶️ 首期酒鬼辣评</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">选题助手教程</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">3</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">情绪日记教程</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">4</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-story">故事</span><span class="slot-text">"蚂蚁金服辞职后…"</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">Claude vs Cursor vs Trae</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">5</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-story">复盘</span><span class="slot-text">本周复盘+下周预告</span></div>
+      </div>
+    </div>
+
+    <!-- W3: 4/6-4/12 -->
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">6</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"NotebookLM太强了"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">7</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"Google AI Studio免费"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">8</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"自动化工作流省3h"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">9</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">🌶️ "AI课程99%割韭菜"</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">Perplexity vs ChatGPT</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">10</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"AI写小红书文案"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">11</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-story">故事</span><span class="slot-text">"UCLA同学卷投行…"</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-hot">信息差</span><span class="slot-text">"国外5个AI工具"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">12</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-data">数据</span><span class="slot-text">W3数据裸奔</span></div>
+      </div>
+    </div>
+
+    <!-- W4: 4/13-4/19 -->
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">13</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">评论区点菜工具测评</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">14</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"OpenClaw实测"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">15</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">"Figma+AI出品牌VI"</span></div>
+      </div>
+    </div>
+    <div class="day-card" style="border-left: 3px solid var(--cyan);">
+      <div class="day-top"><span class="day-num">16</span><span class="day-badge badge-milestone">📹</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">🌶️ 酒鬼辣评 #3</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">视频</span><span class="slot-text">⭐ 首条录屏+语音</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">17</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-hot">信息差</span><span class="slot-text">"Vibe Coding取代程序员？"</span></div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div class="day-top"><span class="day-num">18</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-story">故事</span><span class="slot-text">个人感悟</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">工具对比</span></div>
+      </div>
+    </div>
+    <div class="day-card milestone">
+      <div class="day-top"><span class="day-num">19</span><span class="day-badge badge-milestone">🎯 M1</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-time">8:30</span><span class="slot-tag tag-hot">热点</span><span class="slot-text">AI热点首发</span></div>
+        <div class="slot"><span class="slot-time">20:30</span><span class="slot-tag tag-data">数据</span><span class="slot-text">⭐ 月度大复盘</span></div>
+      </div>
+    </div>
+
+    <!-- W5 start: 4/20-4/26 -->
+    <div class="day-card" style="border-left: 3px solid var(--cyan);">
+      <div class="day-top"><span class="day-num">20</span><span class="day-badge badge-milestone">📹</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-tutorial">视频</span><span class="slot-text">⭐ 开始半出镜视频</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">21</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">22</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">23</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">🌶️ 酒鬼辣评 #4</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">24</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">25</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">26</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-data">数据</span><span class="slot-text">数据裸奔</span></div></div></div>
+
+    <!-- 4/27-4/30 -->
+    <div class="day-card" style="border-left: 3px solid var(--cyan);">
+      <div class="day-top"><span class="day-num">27</span><span class="day-badge badge-milestone">📹</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-story">出镜</span><span class="slot-text">⭐ 正式出镜首发</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">28</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">29</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">30</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">🌶️ 酒鬼辣评 #5</span></div></div></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+  </div>
+</div>
+
+<!-- ════ MAY — Week 7-8 ════ -->
+<div class="month-section" data-phase="grow explode">
+  <div class="month-header">
+    <span class="month-name">May</span>
+    <span class="month-phase grow">增长</span>
+    <span class="month-phase explode">爆发</span>
+    <span class="month-goal">W7-10 · 目标: 150K → 400K粉</span>
+  </div>
+  <div class="weekday-row">
+    <div class="weekday-label">Mon</div><div class="weekday-label">Tue</div><div class="weekday-label">Wed</div>
+    <div class="weekday-label">Thu</div><div class="weekday-label">Fri</div><div class="weekday-label">Sat</div><div class="weekday-label">Sun</div>
+  </div>
+  <div class="cal-grid">
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card empty"></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">1</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">2</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">3</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">4</span><span class="day-badge badge-challenge">挑战2</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-challenge">引爆</span><span class="slot-text">🔥 第二轮挑战赛启动</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">5</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">6</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">7</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">8</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">9</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">10</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-data">数据</span><span class="slot-text">数据裸奔</span></div></div></div>
+    <div class="day-card milestone">
+      <div class="day-top"><span class="day-num">11</span><span class="day-badge badge-milestone">💰</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-data">商业</span><span class="slot-text">⭐ 蒲公英品牌合作</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">12</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">13</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">14</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">15</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">16</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">日常内容</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">17</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+    <div class="day-card" style="border-left: 3px solid var(--gold);">
+      <div class="day-top"><span class="day-num">18</span><span class="day-badge badge-milestone">🚀</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-hot">扩展</span><span class="slot-text">⭐ B站+抖音上线</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">19</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">20</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">21</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">22</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">23</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">24</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-data">数据</span><span class="slot-text">数据裸奔</span></div></div></div>
+    <div class="day-card" style="border-left: 3px solid var(--wine);">
+      <div class="day-top"><span class="day-num">25</span><span class="day-badge badge-challenge">挑战3</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-challenge">引爆</span><span class="slot-text">🔥 第三轮挑战赛</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">26</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">27</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">28</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-challenge">挑战</span><span class="slot-text">挑战赛持续</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">29</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">30</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">31</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+  </div>
+</div>
+
+<!-- ════ JUNE — Week 11-12 ════ -->
+<div class="month-section" data-phase="explode">
+  <div class="month-header">
+    <span class="month-name">June</span>
+    <span class="month-phase explode">冲刺</span>
+    <span class="month-goal">W11-12 · 目标: 400K → 500K粉</span>
+  </div>
+  <div class="weekday-row">
+    <div class="weekday-label">Mon</div><div class="weekday-label">Tue</div><div class="weekday-label">Wed</div>
+    <div class="weekday-label">Thu</div><div class="weekday-label">Fri</div><div class="weekday-label">Sat</div><div class="weekday-label">Sun</div>
+  </div>
+  <div class="cal-grid">
+    <div class="day-card milestone">
+      <div class="day-top"><span class="day-num">1</span><span class="day-badge badge-milestone">💰</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-data">商业</span><span class="slot-text">⭐ 首批商单交付</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">2</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">3</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">4</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">5</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">6</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">7</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-data">数据</span><span class="slot-text">数据裸奔</span></div></div></div>
+    <div class="day-card milestone">
+      <div class="day-top"><span class="day-num">8</span><span class="day-badge badge-milestone">终章</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-tag tag-data">复盘</span><span class="slot-text">⭐ "从0到XX万粉"</span></div>
+      </div>
+    </div>
+    <div class="day-card"><div class="day-top"><span class="day-num">9</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">10</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-tutorial">教程</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">11</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-spicy">辣评</span><span class="slot-text">酒鬼辣评</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">12</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-hot">热点</span><span class="slot-text">全平台分发</span></div></div></div>
+    <div class="day-card"><div class="day-top"><span class="day-num">13</span></div><div class="slots"><div class="slot"><span class="slot-tag tag-story">故事</span><span class="slot-text">个人故事</span></div></div></div>
+    <div class="day-card dday">
+      <div class="day-top"><span class="day-num" style="color:var(--gold);font-size:22px;">14</span><span class="day-badge" style="background:var(--gold);color:white;">D-DAY</span></div>
+      <div class="slots">
+        <div class="slot"><span class="slot-text" style="font-weight:700;color:var(--wine);font-size:12px;">🎯 三个月目标截止日</span></div>
+      </div>
+    </div>
+    <div class="day-card empty"></div><div class="day-card empty"></div><div class="day-card empty"></div><div class="day-card empty"></div><div class="day-card empty"></div><div class="day-card empty"></div><div class="day-card empty"></div>
+  </div>
+</div>
+
+<!-- ════ Growth Chart ════ -->
+<div class="growth-section">
+  <div class="section-title">预期增长曲线</div>
+  <div class="growth-track">
+    <div class="growth-col"><div class="growth-val">0</div><div class="growth-bar bar-prep" style="height:2px"></div><div class="growth-week">W0</div></div>
+    <div class="growth-col"><div class="growth-val">15K</div><div class="growth-bar bar-ignite" style="height:6%"></div><div class="growth-week">W1</div></div>
+    <div class="growth-col"><div class="growth-val">30K</div><div class="growth-bar bar-ignite" style="height:12%"></div><div class="growth-week">W2</div></div>
+    <div class="growth-col"><div class="growth-val">45K</div><div class="growth-bar bar-grow" style="height:18%"></div><div class="growth-week">W3</div></div>
+    <div class="growth-col"><div class="growth-val">70K</div><div class="growth-bar bar-grow" style="height:28%"></div><div class="growth-week">W4</div></div>
+    <div class="growth-col"><div class="growth-val">90K</div><div class="growth-bar bar-grow" style="height:36%"></div><div class="growth-week">W5</div></div>
+    <div class="growth-col"><div class="growth-val">110K</div><div class="growth-bar bar-grow" style="height:44%"></div><div class="growth-week">W6</div></div>
+    <div class="growth-col"><div class="growth-val">140K</div><div class="growth-bar bar-grow" style="height:56%"></div><div class="growth-week">W7</div></div>
+    <div class="growth-col"><div class="growth-val">170K</div><div class="growth-bar bar-grow" style="height:62%"></div><div class="growth-week">W8</div></div>
+    <div class="growth-col"><div class="growth-val">230K</div><div class="growth-bar bar-explode" style="height:72%"></div><div class="growth-week">W9</div></div>
+    <div class="growth-col"><div class="growth-val">310K</div><div class="growth-bar bar-explode" style="height:82%"></div><div class="growth-week">W10</div></div>
+    <div class="growth-col"><div class="growth-val">400K</div><div class="growth-bar bar-explode" style="height:90%"></div><div class="growth-week">W11</div></div>
+    <div class="growth-col"><div class="growth-val" style="color:var(--gold);font-weight:700">500K</div><div class="growth-bar bar-explode" style="height:100%"></div><div class="growth-week">W12</div></div>
+  </div>
+  <div class="budget-section">
+    <div class="budget-label">投放预算分配 · 总计 ¥30,000</div>
+    <div class="budget-track">
+      <div class="budget-seg bseg-ignite" style="flex:4" title="W1-2: ¥4K"></div>
+      <div class="budget-seg bseg-grow" style="flex:13" title="W3-8: ¥13K"></div>
+      <div class="budget-seg bseg-explode" style="flex:20" title="W9-12: ¥20K"></div>
+    </div>
+    <div class="budget-legend">
+      <span>W1-2 引爆 ¥4K</span>
+      <span>W3-8 增长 ¥13K</span>
+      <span>W9-12 爆发 ¥20K</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  酒鬼学姐玩AI · Content Calendar v2.0 · 2026-03-16 — 06-14<br>
+  Generated by Claude Code CCO
+</div>
+
+<script>
+// ── Phase filter ──
+function filter(phase, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.month-section').forEach(s => {
+    if (phase === 'all' || s.dataset.phase.includes(phase)) {
+      s.classList.remove('hidden');
+    } else {
+      s.classList.add('hidden');
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════
+// ── Today Dashboard with localStorage + rollover ──
+// ═══════════════════════════════════════════════
+
+const CALENDAR_DATA = {
+  '2026-03-16': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '准备', tagCls: 'tag-prep', text: '注册"酒鬼学姐玩AI"账号', time: '' },
+    { tag: '搭建', tagCls: 'tag-prep', text: '完善头像 / 简介 / 背景图', time: '' },
+    { tag: '搭建', tagCls: 'tag-prep', text: '生日设为注册隔天（领1000流量券）', time: '' },
+    { tag: '养号', tagCls: 'tag-prep', text: '刷AI/科技笔记30min + 点赞评论10条', time: '' },
+  ]},
+  '2026-03-17': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '养号', tagCls: 'tag-prep', text: '刷AI笔记30min + 互动10条', time: '' },
+    { tag: '备弹', tagCls: 'tag-prep', text: 'Day1素材：小程序截图、AI对话截图', time: '' },
+  ]},
+  '2026-03-18': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '养号', tagCls: 'tag-prep', text: '关注同赛道博主3-5个 + 评论互动', time: '' },
+    { tag: '备弹', tagCls: 'tag-prep', text: 'Day2产品：V0/Cursor搭个人品牌官网', time: '' },
+  ]},
+  '2026-03-19': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '养号', tagCls: 'tag-prep', text: '刷+互动（保持每天）', time: '' },
+    { tag: '备弹', tagCls: 'tag-prep', text: 'Day3产品：AI自动记账机器人', time: '' },
+  ]},
+  '2026-03-20': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '养号', tagCls: 'tag-prep', text: '刷+互动', time: '' },
+    { tag: '备弹', tagCls: 'tag-prep', text: 'Day4产品：小红书AI选题助手', time: '' },
+  ]},
+  '2026-03-21': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '养号', tagCls: 'tag-prep', text: '养号完成 ✓（满5天）', time: '' },
+    { tag: '备弹', tagCls: 'tag-prep', text: 'Day5产品：AI情绪日记App', time: '' },
+  ]},
+  '2026-03-22': { phase: '准备期 W0', phaseCls: 'prep', items: [
+    { tag: '打磨', tagCls: 'tag-prep', text: '精修Day1-5全部9图文案+封面', time: '上午' },
+    { tag: '框架', tagCls: 'tag-prep', text: 'Day6投票 + Day7复盘框架', time: '下午' },
+  ]},
+  '2026-03-23': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day1', tagCls: 'tag-challenge', text: '🔥 发布：网球教练课时小程序', time: '20:30' },
+    { tag: '投放', tagCls: 'tag-data', text: '24h后看数据，互动率>10%投¥200', time: '次日' },
+  ]},
+  '2026-03-24': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day2', tagCls: 'tag-challenge', text: '发布：个人品牌官网', time: '20:30' },
+  ]},
+  '2026-03-25': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day3', tagCls: 'tag-challenge', text: '发布：AI自动记账机器人', time: '20:30' },
+  ]},
+  '2026-03-26': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day4', tagCls: 'tag-challenge', text: '发布：小红书AI选题助手', time: '20:30' },
+  ]},
+  '2026-03-27': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day5', tagCls: 'tag-challenge', text: '发布：AI情绪日记App', time: '20:30' },
+  ]},
+  '2026-03-28': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day6', tagCls: 'tag-challenge', text: '🗳️ 发布：评论区点菜款', time: '20:30' },
+    { tag: '投放', tagCls: 'tag-data', text: '必投薯条 ¥200起', time: '' },
+  ]},
+  '2026-03-29': { phase: '引爆 W1', phaseCls: 'ignite', items: [
+    { tag: 'Day7', tagCls: 'tag-challenge', text: '⭐ 发布：总结复盘+全部开源', time: '20:30' },
+    { tag: '投放', tagCls: 'tag-data', text: '重点投薯条 ¥500', time: '' },
+  ]},
+  '2026-03-30': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '数据', tagCls: 'tag-data', text: '🔥 挑战赛真实数据公开', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Day1小程序详细教程拆解', time: '20:30' },
+  ]},
+  '2026-03-31': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '热点', tagCls: 'tag-hot', text: 'AI热点首发（当天外网最大新闻）', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Day2官网详细教程拆解', time: '20:30' },
+  ]},
+  '2026-04-01': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '热点', tagCls: 'tag-hot', text: 'AI热点首发', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Day3记账机器人教程拆解', time: '20:30' },
+  ]},
+  '2026-04-02': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '辣评', tagCls: 'tag-spicy', text: '🌶️ 首期「酒鬼辣评」', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Day4选题助手教程拆解', time: '20:30' },
+  ]},
+  '2026-04-03': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '热点', tagCls: 'tag-hot', text: 'AI热点首发', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Day5情绪日记教程拆解', time: '20:30' },
+  ]},
+  '2026-04-04': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '故事', tagCls: 'tag-story', text: '"从蚂蚁金服辞职后，我每天和AI聊12小时"', time: '8:30' },
+    { tag: '教程', tagCls: 'tag-tutorial', text: 'Claude Code vs Cursor vs Trae 对比', time: '20:30' },
+  ]},
+  '2026-04-05': { phase: '承接 W2', phaseCls: 'ignite', items: [
+    { tag: '热点', tagCls: 'tag-hot', text: 'AI热点首发', time: '8:30' },
+    { tag: '复盘', tagCls: 'tag-story', text: '本周复盘 + 下周预告', time: '20:30' },
+  ]},
+};
+
+const STORAGE_KEY = 'xhs-cco-todos';
+const WEEKDAYS = ['日','一','二','三','四','五','六'];
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return `${d.getMonth()+1}月${d.getDate()}日 · 周${WEEKDAYS[d.getDay()]}`;
+}
+
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getTodayItems() {
+  const today = getToday();
+  const state = loadState();
+  const items = [];
+
+  // 1. Rollover: find unchecked items from past days
+  const allDates = Object.keys(state).filter(d => d < today).sort();
+  for (const date of allDates) {
+    const dayState = state[date];
+    if (!dayState) continue;
+    for (const [idx, item] of Object.entries(dayState)) {
+      if (!item.checked && item.text) {
+        items.push({ ...item, from: date, key: `${date}::${idx}` });
+      }
+    }
+  }
+
+  // 2. Today's scheduled items
+  const todayData = CALENDAR_DATA[today];
+  if (todayData) {
+    for (let i = 0; i < todayData.items.length; i++) {
+      const item = todayData.items[i];
+      const existing = state[today]?.[i];
+      items.push({
+        tag: item.tag,
+        tagCls: item.tagCls,
+        text: item.text,
+        time: item.time,
+        checked: existing?.checked || false,
+        from: null,
+        key: `${today}::${i}`,
+      });
+    }
+  }
+
+  return items;
+}
+
+function renderTodayDash() {
+  const today = getToday();
+  const todayData = CALENDAR_DATA[today];
+
+  // Header
+  document.getElementById('today-date').textContent = formatDate(today);
+  const phaseEl = document.getElementById('today-phase');
+  if (todayData) {
+    phaseEl.textContent = todayData.phase;
+    phaseEl.className = 'today-phase-tag month-phase ' + todayData.phaseCls;
+  } else {
+    phaseEl.textContent = '自由日';
+    phaseEl.className = 'today-phase-tag month-phase prep';
+  }
+
+  const items = getTodayItems();
+  const listEl = document.getElementById('today-list');
+  listEl.innerHTML = '';
+
+  if (items.length === 0) {
+    listEl.innerHTML = '<div class="today-empty">今天没有排定的任务 — 去 /cco 问问你的CCO？</div>';
+    document.getElementById('today-progress').style.width = '0%';
+    document.getElementById('today-progress-text').textContent = '—';
+    document.getElementById('today-overdue-hint').textContent = '';
+    return;
+  }
+
+  let overdueCount = 0;
+
+  items.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'today-item' + (item.checked ? ' checked' : '') + (item.from ? ' overdue' : '');
+    if (item.from) overdueCount++;
+
+    el.innerHTML = `
+      <div class="today-item-check"></div>
+      ${item.tag ? `<span class="today-item-tag ${item.tagCls}">${item.tag}</span>` : ''}
+      <span class="today-item-text">${item.text}</span>
+      ${item.from ? `<span class="today-item-from">← ${item.from.slice(5)}</span>` : ''}
+      ${item.time ? `<span class="today-item-time">${item.time}</span>` : ''}
+    `;
+
+    el.addEventListener('click', () => {
+      const state = loadState();
+      const [date, idx] = item.key.split('::');
+      if (!state[date]) state[date] = {};
+      const wasChecked = state[date][idx]?.checked || false;
+      state[date][idx] = { text: item.text, checked: !wasChecked };
+      saveState(state);
+      renderTodayDash();
+    });
+
+    listEl.appendChild(el);
+  });
+
+  // Progress
+  const done = items.filter(i => i.checked).length;
+  const pct = Math.round((done / items.length) * 100);
+  document.getElementById('today-progress').style.width = pct + '%';
+  document.getElementById('today-progress-text').textContent = `${done}/${items.length}`;
+
+  // Overdue hint
+  const hint = document.getElementById('today-overdue-hint');
+  if (overdueCount > 0) {
+    hint.textContent = `⚠ ${overdueCount} 项从之前滚转过来`;
+    hint.style.color = 'var(--orange)';
+  } else {
+    hint.textContent = '';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ── Weekly Checklist with localStorage ──
+// ═══════════════════════════════════════════════
+
+const WEEKLY_STORAGE_KEY = 'xhs-cco-weekly';
+
+const WEEKLY_CHECKLISTS = {
+  0: { label: '准备期清单 · W0', dates: ['2026-03-16','2026-03-22'], items: [
+    '注册"酒鬼学姐玩AI"小红书账号',
+    '头像：本人氛围感照片',
+    '昵称：酒鬼学姐玩AI',
+    '简介：UCLA金融硕士｜前蚂蚁金服｜零代码用AI做产品…',
+    '背景图：电脑桌面 + slogan',
+    '生日设为注册隔天（领1000流量券）',
+    '养号5天：每天刷同赛道内容30min',
+    '养号5天：每天点赞+收藏+评论 5-10条',
+    '关注 3-5个 同赛道千粉/万粉AI博主',
+    '准备"7天7个产品"挑战赛全部素材',
+    '精修Day1-5的9图文案+封面',
+  ]},
+  1: { label: '挑战赛周 · W1', dates: ['2026-03-23','2026-03-29'], items: [
+    'Day1 网球教练课时小程序文案终稿',
+    'Day2 个人品牌官网搭建完成',
+    'Day3 AI记账机器人搭建完成',
+    'Day4 小红书AI选题助手搭建完成',
+    'Day5 AI情绪日记App搭建完成',
+    'Day6 评论区投票选题准备',
+    'Day7 复盘框架 + 开源资料整理',
+    '每篇发布后监控24h数据',
+    '互动率>10%的投薯条 ¥200',
+    '每天回复所有评论',
+  ]},
+  2: { label: '承接热度 · W2', dates: ['2026-03-30','2026-04-05'], items: [
+    '挑战赛数据裸奔文案',
+    '5篇教程拆解（Day1-5各一篇）',
+    '首期酒鬼辣评选题确定',
+    '个人故事"蚂蚁金服辞职"文案',
+    'Claude Code vs Cursor vs Trae 对比测评',
+    '启动每日2篇节奏（8:30 + 20:30）',
+  ]},
+  3: { label: '建立节奏 · W3', dates: ['2026-04-06','2026-04-12'], items: [
+    '"评论区点菜"机制全面启用',
+    '开始去同类博主评论区留高质量评论',
+    '酒鬼辣评 #2 选题+发布',
+    'NotebookLM / Google AI Studio 测评',
+    '"AI自动写小红书文案"工作流公开',
+    '"国外最火5个AI工具"信息差内容',
+    '爆款笔记(>5000赞)追加薯条',
+  ]},
+  4: { label: '内容矩阵成型 · W4', dates: ['2026-04-13','2026-04-19'], items: [
+    '首条录屏+语音视频制作发布',
+    '酒鬼辣评 #3 发布',
+    'OpenClaw / Figma+AI 测评',
+    '"Vibe Coding取代程序员？"信息差内容',
+    '第一个月数据裸奔大复盘',
+    '联系同量级博主探索互推',
+  ]},
+};
+
+function getCurrentWeek() {
+  const start = new Date('2026-03-16T00:00:00');
+  const now = new Date();
+  const diff = Math.floor((now - start) / (7 * 24 * 60 * 60 * 1000));
+  return Math.max(0, Math.min(diff, 12));
+}
+
+function loadWeeklyState() {
+  try { return JSON.parse(localStorage.getItem(WEEKLY_STORAGE_KEY)) || {}; }
+  catch { return {}; }
+}
+
+function saveWeeklyState(state) {
+  localStorage.setItem(WEEKLY_STORAGE_KEY, JSON.stringify(state));
+}
+
+function renderWeeklyChecklist() {
+  const week = getCurrentWeek();
+  const data = WEEKLY_CHECKLISTS[week];
+  const container = document.getElementById('week-checklist');
+  const titleEl = document.getElementById('week-checklist-title');
+  const progressEl = document.getElementById('week-checklist-progress');
+
+  if (!data) {
+    titleEl.textContent = `W${week} 清单`;
+    container.innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">本周清单将在 /cco 站会中动态生成</div>';
+    progressEl.textContent = '';
+    return;
+  }
+
+  titleEl.textContent = data.label;
+  const state = loadWeeklyState();
+  const weekKey = `w${week}`;
+  if (!state[weekKey]) state[weekKey] = {};
+
+  container.innerHTML = '';
+  let done = 0;
+
+  data.items.forEach((text, i) => {
+    const checked = state[weekKey][i] || false;
+    if (checked) done++;
+
+    const el = document.createElement('div');
+    el.className = 'wk-item' + (checked ? ' checked' : '');
+    el.innerHTML = `<div class="wk-check"></div><span class="wk-text">${text}</span>`;
+    el.addEventListener('click', () => {
+      const s = loadWeeklyState();
+      if (!s[weekKey]) s[weekKey] = {};
+      s[weekKey][i] = !s[weekKey][i];
+      saveWeeklyState(s);
+      renderWeeklyChecklist();
+    });
+    container.appendChild(el);
+  });
+
+  progressEl.textContent = `${done}/${data.items.length}`;
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize state for today if not exists
+  const today = getToday();
+  const state = loadState();
+  if (!state[today] && CALENDAR_DATA[today]) {
+    state[today] = {};
+    CALENDAR_DATA[today].items.forEach((item, i) => {
+      state[today][i] = { text: item.text, checked: false };
+    });
+    saveState(state);
+  }
+  renderTodayDash();
+  renderWeeklyChecklist();
+});
+</script>
+</body>
+</html>
